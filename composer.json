@@ -1,0 +1,15 @@
+{
+    "name": "Testlin/db",
+    "description": "study ioc",
+    "authors": [
+        {
+            "name": "jani",
+            "email": "505932384@qq.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Testlin\\Db\\": "src/"
+        }
+    }
+}
