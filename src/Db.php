@@ -12,7 +12,7 @@ class Db
     {
         $driver = strtolower($driver);
         if (in_array($driver, array('pdo', 'mysqli')) == false) {
-            throw new Exception("not driver");
+            throw new \Exception("not driver");
         }
 
         $this->db = $this->dbConnect($driver, $config);
@@ -20,10 +20,10 @@ class Db
 
     protected function dbConnect($driver, $config)
     {
-        if (!file_exists(__DIR__ . '/Dbs/' . ucfirst($driver) . '.php')) {
-            throw new Exception("db driver [$driver] is not supported.");
+        if (!file_exists(__DIR__ . '/Driver/' . ucfirst($driver) . '.php')) {
+            throw new \Exception("db driver [$driver] is not supported.");
         }
-        $gateway = __NAMESPACE__ . '\\Dbs\\' . ucfirst($driver);
+        $gateway = __NAMESPACE__ . '\\Driver\\' . ucfirst($driver);
         return new $gateway($config);
     }
 

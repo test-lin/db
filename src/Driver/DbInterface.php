@@ -1,6 +1,6 @@
 <?php
 
-namespace Testlin\Db\Dbs;
+namespace Testlin\Db\Driver;
 
 interface DbInterface
 {

@@ -1,8 +1,8 @@
 <?php
 
-namespace Testlin\Db\Dbs;
+namespace Testlin\Db\Driver;
 
-use Testlin\Db\Dbs\DbInterface;
+use Testlin\Db\Driver\DbInterface;
 
 class PDO implements DbInterface
 {
