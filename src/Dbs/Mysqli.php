@@ -4,30 +4,40 @@ namespace Testlin\Db\Dbs;
 
 use Testlin\Db\Dbs\DbInterface;
 
-class MyPdoMysql implements DbInterface
+class Mysqli implements DbInterface
 {
-    protected $pdo;
+    protected $mysqli;
+
+    public function __construct(array $config)
+    {
+        return $this->getConnection($config);
+    }
 
     public function getConnection(array $config)
     {
-        if (is_null($this->pdo)) {
-            $dbtype = 'mysql';
+        if (is_null($this->mysqli)) {
             $host = $config['host'] ?? '127.0.0.1';
             $port = $config['port'] ?? '3306';
             $dbname = $config['dbname'] ?? '';
             $charset = $config['charset'] ?? 'utf8';
-            $dsn = "{$dbtype}:host={$host};dbname={$dbname};charset={$charset};port={$port}";
-            $this->pdo = new \PDO($dsn, $config['username'], $config['password']);
+            $this->mysqli = new \mysqli($host, $config['username'], $config['password'], $dbname, $port);
+            $this->mysqli->set_charset($charset);
         }
 
-        return $this->pdo;
+        return $this->mysqli;
+    }
+
+    public function select_db(String $dbname)
+    {
+        $this->mysqli->select_db($dbname);
     }
 
     public function select(String $sql)
     {
-        $result = $this->pdo->query($sql);
+        $result = $this->mysqli->query($sql);
+
         $return = array();
-        foreach ($result as $row) {
+        while ($row = $result->fetch_assoc()) {
             $return[] = $row;
         }
 
@@ -40,12 +50,12 @@ class MyPdoMysql implements DbInterface
         $data = "'" . join("', '", array_values($data)) . "'";
         $sql = "INSERT INTO {$table} ({$fields}) VALUES ({$data})";
 
-        return (bool) $this->pdo->query($sql);
+        return (bool) $this->mysqli->query($sql);
     }
 
     public function getInsertId()
     {
-        return (int) $this->pdo->lastInsertId();
+        return (int) $this->mysqli->insert_id;
     }
 
     public function update(String $table, array $data, $where)
@@ -54,7 +64,7 @@ class MyPdoMysql implements DbInterface
         $data = "'" . join("', '", array_values($data)) . "'";
         $sql = "UPDATE {$table} SET {$data} WHERE {$where}";
 
-        return (bool) $this->pdo->query($sql);
+        return (bool) $this->mysqli->query($sql);
     }
 
     public function delete(String $table, $where)
@@ -62,21 +72,23 @@ class MyPdoMysql implements DbInterface
         $where = $where ?: '1';
         $sql = "DELETE {$table} WHERE {$where}";
 
-        return (bool) $this->pdo->query($sql);
+        return (bool) $this->mysqli->query($sql);
     }
 
     public function beginTransaction()
     {
-        $this->pdo->beginTransaction();
+        $this->mysqli->autocommit(false);
     }
 
     public function rollback()
     {
-        $this->pdo->rollBack();
+        $this->mysqli->rollback();
+        $this->mysqli->autocommit(true);
     }
 
     public function commit()
     {
-        $this->pdo->commit();
+        $this->mysqli->commit();
+        $this->mysqli->autocommit(true);
     }
 }

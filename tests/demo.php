@@ -1,17 +1,14 @@
 <?php
 
 require __DIR__ . '/../vendor/autoload.php';
+// require __DIR__ . '/../init.php';
 
 $config = array(
     'dbname' => 'dsc',
     'username' => 'root',
     'password' => 'lin'
 );
-$mysql = new Testlin\Db\Dbs\MyMysqli;
-// $mysql = new Testlin\Db\Dbs\MyPdoMysql;
-$mysql->getConnection($config);
+$db = new Testlin\Db\Db('pdo', $config);
 
-$db = new Testlin\Db\Db($mysql);
-
-$sql = "select * from dsc_ad where ad_id=33";
+$sql = "select * from dsc_ad limit 1";
 print_r($db->getRow($sql));

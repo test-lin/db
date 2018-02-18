@@ -8,9 +8,23 @@ class Db
 {
     protected $db;
 
-    public function __construct(DbInterface $db)
+    public function __construct(string $driver, array $config)
     {
-        $this->db = $db;
+        $driver = strtolower($driver);
+        if (in_array($driver, array('pdo', 'mysqli')) == false) {
+            throw new Exception("not driver");
+        }
+
+        $this->db = $this->dbConnect($driver, $config);
+    }
+
+    protected function dbConnect($driver, $config)
+    {
+        if (!file_exists(__DIR__ . '/Dbs/' . ucfirst($driver) . '.php')) {
+            throw new Exception("db driver [$driver] is not supported.");
+        }
+        $gateway = __NAMESPACE__ . '\\Dbs\\' . ucfirst($driver);
+        return new $gateway($config);
     }
 
     public function getOne($sql)
