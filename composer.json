@@ -1,6 +1,8 @@
 {
-    "name": "Testlin/db",
-    "description": "study ioc",
+    "name": "test-lin/db",
+    "description": "database",
+    "type": "library",
+    "license": "MIT",
     "authors": [
         {
             "name": "jani",
