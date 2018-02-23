@@ -7,6 +7,7 @@ use Testlin\Db\Driver\DbInterface;
 class PDO implements DbInterface
 {
     protected $pdo;
+    protected $sql;
 
     public function __construct(array $config)
     {
@@ -44,6 +45,7 @@ class PDO implements DbInterface
         $fields = "`" . join("`, `", array_keys($data)) . "`";
         $data = "'" . join("', '", array_values($data)) . "'";
         $sql = "INSERT INTO {$table} ({$fields}) VALUES ({$data})";
+        $this->sql = $sql;
 
         return (bool) $this->pdo->query($sql);
     }
@@ -58,6 +60,7 @@ class PDO implements DbInterface
         $where = $where ?: '1';
         $data = "'" . join("', '", array_values($data)) . "'";
         $sql = "UPDATE {$table} SET {$data} WHERE {$where}";
+        $this->sql = $sql;
 
         return (bool) $this->pdo->query($sql);
     }
@@ -66,6 +69,7 @@ class PDO implements DbInterface
     {
         $where = $where ?: '1';
         $sql = "DELETE {$table} WHERE {$where}";
+        $this->sql = $sql;
 
         return (bool) $this->pdo->query($sql);
     }
@@ -83,5 +87,10 @@ class PDO implements DbInterface
     public function commit()
     {
         $this->pdo->commit();
+    }
+
+    public function getSql()
+    {
+        return $this->sql;
     }
 }

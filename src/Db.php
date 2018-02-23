@@ -60,17 +60,22 @@ class Db
 
     public function insert(String $table, array $data)
     {
-        $this->db->update($table, $data);
+        return $this->db->insert($table, $data);
+    }
+
+    public function getInsertId()
+    {
+        return $this->db->getInsertId();
     }
 
     public function update(String $table, array $data, $where)
     {
-        $this->db->update($table, $data, $where);
+        return $this->db->update($table, $data, $where);
     }
 
     public function delete(String $table, $where)
     {
-        $this->db->delete($table, $where);
+        return $this->db->delete($table, $where);
     }
 
     public function beginTransaction()
@@ -86,5 +91,10 @@ class Db
     public function commit()
     {
         $this->db->commit();
+    }
+
+    public function getSql()
+    {
+        return $this->db->getSql();
     }
 }

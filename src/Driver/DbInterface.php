@@ -10,6 +10,8 @@ interface DbInterface
 
     public function insert(String $table, array $data);
 
+    public function getInsertId();
+
     public function update(String $table, array $data, $where);
 
     public function delete(String $table, $where);
@@ -19,4 +21,6 @@ interface DbInterface
     public function rollback();
 
     public function commit();
+
+    public function getSql();
 }

@@ -7,6 +7,7 @@ use Testlin\Db\Driver\DbInterface;
 class Mysqli implements DbInterface
 {
     protected $mysqli;
+    protected $sql;
 
     public function __construct(array $config)
     {
@@ -37,8 +38,10 @@ class Mysqli implements DbInterface
         $result = $this->mysqli->query($sql);
 
         $return = array();
-        while ($row = $result->fetch_assoc()) {
-            $return[] = $row;
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $return[] = $row;
+            }
         }
 
         return $return;
@@ -49,6 +52,7 @@ class Mysqli implements DbInterface
         $fields = "`" . join("`, `", array_keys($data)) . "`";
         $data = "'" . join("', '", array_values($data)) . "'";
         $sql = "INSERT INTO {$table} ({$fields}) VALUES ({$data})";
+        $this->sql = $sql;
 
         return (bool) $this->mysqli->query($sql);
     }
@@ -60,9 +64,10 @@ class Mysqli implements DbInterface
 
     public function update(String $table, array $data, $where)
     {
-        $where = $where ?: '1';
+        // $where = $where ?: '1';
         $data = "'" . join("', '", array_values($data)) . "'";
         $sql = "UPDATE {$table} SET {$data} WHERE {$where}";
+        $this->sql = $sql;
 
         return (bool) $this->mysqli->query($sql);
     }
@@ -71,6 +76,7 @@ class Mysqli implements DbInterface
     {
         $where = $where ?: '1';
         $sql = "DELETE {$table} WHERE {$where}";
+        $this->sql = $sql;
 
         return (bool) $this->mysqli->query($sql);
     }
@@ -90,5 +96,10 @@ class Mysqli implements DbInterface
     {
         $this->mysqli->commit();
         $this->mysqli->autocommit(true);
+    }
+
+    public function getSql()
+    {
+        return $this->sql;
     }
 }
