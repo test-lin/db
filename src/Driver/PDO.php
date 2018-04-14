@@ -2,7 +2,7 @@
 
 namespace Testlin\Db\Driver;
 
-class PDO implements DbInterface
+class Pdo implements DbInterface
 {
     protected $pdo;
     protected $sql;
@@ -16,21 +16,66 @@ class PDO implements DbInterface
             $dbname = $config['dbname'] ?? '';
             $charset = $config['charset'] ?? 'utf8';
             $dsn = "{$dbtype}:host={$host};dbname={$dbname};charset={$charset};port={$port}";
-            $this->pdo = new \PDO($dsn, $config['username'], $config['password']);
+            
+            try {
+                $this->pdo = new \PDO($dsn, $config['username'], $config['password']);
+            } catch (\PDOException $e) {
+                throw new \Exception('Connection failed: ' . $e->getMessage());
+            }
         }
 
         return $this->pdo;
     }
 
-    public function select(String $sql)
+    public function query($sql)
     {
-        $result = $this->pdo->query($sql);
-        $return = array();
-        foreach ($result as $row) {
-            $return[] = $row;
+        $sth = $this->pdo->prepare($sql);
+        $sth->execute();
+        if ($sth->errorCode() != 0) {
+            $error_info = $sth->errorInfo();
+            $error_message = "[Sql Error] {$error_info[1]} - {$error_info[2]}";
+            throw new \Exception($error_message);
         }
 
-        return $return;
+        return $sth;
+    }
+    
+    public function exec($sql,$lastId = false)
+    {
+        if($lastId)
+        {
+            $this->pdo->exec($sql);
+            return $this->pdo->lastInsertId();
+        }else{
+            return $this->pdo->exec($sql);
+        }
+    }
+
+    public function select(String $sql)
+    {
+        $sth = $this->query($sql);
+
+        $result = $sth->fetchAll(\PDO::FETCH_ASSOC);
+
+        return $result ? $result : array();
+    }
+
+    public function find(String $sql)
+    {
+        $sth = $this->query($sql);
+
+        $result = $sth->fetch(\PDO::FETCH_ASSOC);
+
+        return $result ? $result : array();
+    }
+
+    public function getField(String $sql, String $field = null)
+    {
+        $sth = $this->query($sql);
+
+        $result = $sth->fetch(\PDO::FETCH_NUM);
+
+        return isset($result['0']) ? $result['0'] : '';
     }
 
     public function insert(String $table, array $data)
@@ -40,12 +85,12 @@ class PDO implements DbInterface
         $sql = "INSERT INTO {$table} ({$fields}) VALUES ({$data})";
         $this->sql = $sql;
 
-        return (bool) $this->pdo->query($sql);
+        return $this->exec($sql, true);
     }
 
     public function getInsertId()
     {
-        return (int) $this->pdo->lastInsertId();
+        return $this->pdo->lastInsertId();
     }
 
     public function update(String $table, array $data, $where)
@@ -55,16 +100,29 @@ class PDO implements DbInterface
         $sql = "UPDATE {$table} SET {$data} WHERE {$where}";
         $this->sql = $sql;
 
-        return (bool) $this->pdo->query($sql);
+        $rs = $this->exec($sql);
+
+        return ($rs === false) ? false : true;
     }
 
     public function delete(String $table, $where)
     {
-        $where = $where ?: '1';
-        $sql = "DELETE {$table} WHERE {$where}";
+        $sql = 'DELETE FROM `'.$table.'`';
+
+        if (!is_null($where)) {
+            if (is_array($where)) {
+                $whereArr = array();
+                foreach ($where as $key => $value) {
+                    $whereArr[] = '`'.$key.'` = '.$value;
+                }
+                $sql .= ' where '.implode(' AND ', $whereArr);
+            } else {
+                $sql .= ' where '.$where;
+            }
+        }
         $this->sql = $sql;
 
-        return (bool) $this->pdo->query($sql);
+        return $this->exec($sql);
     }
 
     public function beginTransaction()

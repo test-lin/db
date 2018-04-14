@@ -15,6 +15,10 @@ class Mysqli implements DbInterface
             $dbname = $config['dbname'] ?? '';
             $charset = $config['charset'] ?? 'utf8';
             $this->mysqli = new \mysqli($host, $config['username'], $config['password'], $dbname, $port);
+            if ($this->mysqli->connect_error) {
+                throw new \Exception('Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error);
+            }
+
             $this->mysqli->set_charset($charset);
         }
 
@@ -28,11 +32,13 @@ class Mysqli implements DbInterface
     
     protected function query($sql)
     {
-        try {
-            return $this->query($sql);
-        } catch (\mysqli_sql_exception $e) {
-            throw $e;
+        $result = $this->mysqli->query($sql);
+        if ($this->mysqli->errno) {
+            $error_message = "[Sql Error] {$this->mysqli->errno} - {$this->mysqli->error}";
+            throw new \Exception($error_message);
         }
+
+        return $result;
     }
 
     public function select(String $sql)
