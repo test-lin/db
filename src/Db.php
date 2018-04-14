@@ -2,8 +2,6 @@
 
 namespace Testlin\Db;
 
-use Testlin\Db\Dbs\DbInterface;
-
 class Db
 {
     protected $db;
@@ -23,8 +21,8 @@ class Db
         if (!file_exists(__DIR__ . '/Driver/' . ucfirst($driver) . '.php')) {
             throw new \Exception("db driver [$driver] is not supported.");
         }
-        $gateway = __NAMESPACE__ . '\\Driver\\' . ucfirst($driver);
-        return new $gateway($config);
+        $db = __NAMESPACE__ . '\\Driver\\' . ucfirst($driver);
+        return new $db($config);
     }
 
     public function getOne($sql)

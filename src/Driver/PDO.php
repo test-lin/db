@@ -2,19 +2,12 @@
 
 namespace Testlin\Db\Driver;
 
-use Testlin\Db\Driver\DbInterface;
-
 class PDO implements DbInterface
 {
     protected $pdo;
     protected $sql;
 
     public function __construct(array $config)
-    {
-        return $this->getConnection($config);
-    }
-
-    public function getConnection(array $config)
     {
         if (is_null($this->pdo)) {
             $dbtype = 'mysql';

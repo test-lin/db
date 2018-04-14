@@ -2,19 +2,12 @@
 
 namespace Testlin\Db\Driver;
 
-use Testlin\Db\Driver\DbInterface;
-
 class Mysqli implements DbInterface
 {
     protected $mysqli;
     protected $sql;
 
     public function __construct(array $config)
-    {
-        return $this->getConnection($config);
-    }
-
-    public function getConnection(array $config)
     {
         if (is_null($this->mysqli)) {
             $host = $config['host'] ?? '127.0.0.1';
@@ -32,10 +25,19 @@ class Mysqli implements DbInterface
     {
         $this->mysqli->select_db($dbname);
     }
+    
+    protected function query($sql)
+    {
+        try {
+            return $this->query($sql);
+        } catch (\mysqli_sql_exception $e) {
+            throw $e;
+        }
+    }
 
     public function select(String $sql)
     {
-        $result = $this->mysqli->query($sql);
+        $result = $this->query($sql);
 
         $return = array();
         if ($result) {
@@ -47,6 +49,25 @@ class Mysqli implements DbInterface
         return $return;
     }
 
+    public function find(String $sql)
+    {
+        $result = $this->query($sql);
+
+        return $result->fetch_assoc();
+    }
+
+    public function getField(String $sql, String $field = null)
+    {
+        $result = $this->query($sql);
+
+        $row = $result->fetch_array();
+        if ($field !== null && $field) {
+            return $row[$field] ?? false;
+        } else {
+            return $row[0] ?? false;
+        }
+    }
+
     public function insert(String $table, array $data)
     {
         $fields = "`" . join("`, `", array_keys($data)) . "`";
@@ -54,7 +75,7 @@ class Mysqli implements DbInterface
         $sql = "INSERT INTO {$table} ({$fields}) VALUES ({$data})";
         $this->sql = $sql;
 
-        return (bool) $this->mysqli->query($sql);
+        return (bool) $this->query($sql);
     }
 
     public function getInsertId()
@@ -69,7 +90,7 @@ class Mysqli implements DbInterface
         $sql = "UPDATE {$table} SET {$data} WHERE {$where}";
         $this->sql = $sql;
 
-        return (bool) $this->mysqli->query($sql);
+        return (bool) $this->query($sql);
     }
 
     public function delete(String $table, $where)
@@ -78,7 +99,7 @@ class Mysqli implements DbInterface
         $sql = "DELETE {$table} WHERE {$where}";
         $this->sql = $sql;
 
-        return (bool) $this->mysqli->query($sql);
+        return (bool) $this->query($sql);
     }
 
     public function beginTransaction()

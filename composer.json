@@ -9,6 +9,9 @@
             "email": "505932384@qq.com"
         }
     ],
+    "require": {
+        "php": ">=7.0.0"
+    },
     "autoload": {
         "psr-4": {
             "Testlin\\Db\\": "./src"

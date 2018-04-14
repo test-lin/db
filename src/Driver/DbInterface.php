@@ -4,9 +4,11 @@ namespace Testlin\Db\Driver;
 
 interface DbInterface
 {
-    public function getConnection(array $config);
-
     public function select(String $sql);
+
+    public function find(String $sql);
+
+    public function getField(String $sql, String $field = null);
 
     public function insert(String $table, array $data);
 
