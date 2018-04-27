@@ -2,8 +2,6 @@
 
 namespace Testlin\Db\Driver;
 
-use Testlin\Db\Driver\DbInterface;
-
 class Mysqli implements DbInterface
 {
     protected $mysqli;
@@ -11,17 +9,16 @@ class Mysqli implements DbInterface
 
     public function __construct(array $config)
     {
-        return $this->getConnection($config);
-    }
-
-    public function getConnection(array $config)
-    {
         if (is_null($this->mysqli)) {
             $host = $config['host'] ?? '127.0.0.1';
             $port = $config['port'] ?? '3306';
             $dbname = $config['dbname'] ?? '';
             $charset = $config['charset'] ?? 'utf8';
             $this->mysqli = new \mysqli($host, $config['username'], $config['password'], $dbname, $port);
+            if ($this->mysqli->connect_error) {
+                throw new \Exception('Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error);
+            }
+
             $this->mysqli->set_charset($charset);
         }
 
@@ -33,9 +30,20 @@ class Mysqli implements DbInterface
         $this->mysqli->select_db($dbname);
     }
 
-    public function select(String $sql)
+    protected function query($sql)
     {
         $result = $this->mysqli->query($sql);
+        if ($this->mysqli->errno) {
+            $error_message = "[Sql Error] {$this->mysqli->errno} - {$this->mysqli->error}";
+            throw new \Exception($error_message);
+        }
+
+        return $result;
+    }
+
+    public function select(String $sql)
+    {
+        $result = $this->query($sql);
 
         $return = array();
         if ($result) {
@@ -47,6 +55,25 @@ class Mysqli implements DbInterface
         return $return;
     }
 
+    public function find(String $sql)
+    {
+        $result = $this->query($sql);
+
+        return $result->fetch_assoc();
+    }
+
+    public function getField(String $sql, String $field = null)
+    {
+        $result = $this->query($sql);
+
+        $row = $result->fetch_array();
+        if ($field !== null && $field) {
+            return $row[$field] ?? false;
+        } else {
+            return $row[0] ?? false;
+        }
+    }
+
     public function insert(String $table, array $data)
     {
         $fields = "`" . join("`, `", array_keys($data)) . "`";
@@ -54,7 +81,7 @@ class Mysqli implements DbInterface
         $sql = "INSERT INTO {$table} ({$fields}) VALUES ({$data})";
         $this->sql = $sql;
 
-        return (bool) $this->mysqli->query($sql);
+        return (bool) $this->query($sql);
     }
 
     public function getInsertId()
@@ -69,7 +96,7 @@ class Mysqli implements DbInterface
         $sql = "UPDATE {$table} SET {$data} WHERE {$where}";
         $this->sql = $sql;
 
-        return (bool) $this->mysqli->query($sql);
+        return (bool) $this->query($sql);
     }
 
     public function delete(String $table, $where)
@@ -78,7 +105,7 @@ class Mysqli implements DbInterface
         $sql = "DELETE {$table} WHERE {$where}";
         $this->sql = $sql;
 
-        return (bool) $this->mysqli->query($sql);
+        return (bool) $this->query($sql);
     }
 
     public function beginTransaction()
