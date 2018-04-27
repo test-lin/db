@@ -41,6 +41,17 @@ class Mysqli implements DbInterface
         return $result;
     }
 
+    protected function query($sql)
+    {
+        $result = $this->mysqli->query($sql);
+        if ($this->mysqli->errno) {
+            $error_message = "[Sql Error] {$this->mysqli->errno} - {$this->mysqli->error}";
+            throw new \Exception($error_message);
+        }
+
+        return $result;
+    }
+
     public function select(String $sql)
     {
         $result = $this->query($sql);
