@@ -36,3 +36,23 @@ print_r($db->find("select * from tp_cate"));
 echo "\n==============================\n";
 
 print_r($db->select("select * from tp_cate limit 0, 10"));
+
+echo "\n==============================\n";
+
+$state = $db->update('tp_file', ['name' => 'test', 'type' => 'image/jpeg'], "id = 9");
+
+var_dump($state);
+
+echo "\n==============================\n";
+
+$data = [
+    'local_name' => './1/lkwjerlkasdf.mp4',
+    'href' => 'http://www.baidu.com/1.mp4',
+    'index_id' => 123,
+    'is_download' => 1,
+];
+$state = $db->insert('tp_video', $data);
+
+var_dump($state);
+
+exit;
