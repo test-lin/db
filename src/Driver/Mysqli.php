@@ -29,7 +29,7 @@ class Mysqli implements DbInterface
     {
         $this->mysqli->select_db($dbname);
     }
-    
+
     protected function query($sql)
     {
         $result = $this->mysqli->query($sql);
@@ -91,9 +91,16 @@ class Mysqli implements DbInterface
 
     public function update(String $table, array $data, $where)
     {
-        // $where = $where ?: '1';
-        $data = "'" . join("', '", array_values($data)) . "'";
-        $sql = "UPDATE {$table} SET {$data} WHERE {$where}";
+        $update_data = array();
+        foreach ($data as $key => $value) {
+            $update_data[] = "{$key}='{$value}'";
+        }
+        if (empty($update_data)) {
+            return false;
+        }
+        $update_data = join(',', $update_data);
+
+        $sql = "UPDATE {$table} SET {$update_data} WHERE {$where}";
         $this->sql = $sql;
 
         return (bool) $this->query($sql);

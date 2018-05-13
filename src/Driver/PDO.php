@@ -16,7 +16,7 @@ class Pdo implements DbInterface
             $dbname = $config['dbname'] ?? '';
             $charset = $config['charset'] ?? 'utf8';
             $dsn = "{$dbtype}:host={$host};dbname={$dbname};charset={$charset};port={$port}";
-            
+
             try {
                 $this->pdo = new \PDO($dsn, $config['username'], $config['password']);
             } catch (\PDOException $e) {
@@ -39,7 +39,7 @@ class Pdo implements DbInterface
 
         return $sth;
     }
-    
+
     public function exec($sql,$lastId = false)
     {
         if($lastId)
@@ -95,9 +95,16 @@ class Pdo implements DbInterface
 
     public function update(String $table, array $data, $where)
     {
-        $where = $where ?: '1';
-        $data = "'" . join("', '", array_values($data)) . "'";
-        $sql = "UPDATE {$table} SET {$data} WHERE {$where}";
+        $update_data = array();
+        foreach ($data as $key => $value) {
+            $update_data[] = "{$key}='{$value}'";
+        }
+        if (empty($update_data)) {
+            return false;
+        }
+        $update_data = join(',', $update_data);
+
+        $sql = "UPDATE {$table} SET {$update_data} WHERE {$where}";
         $this->sql = $sql;
 
         $rs = $this->exec($sql);
