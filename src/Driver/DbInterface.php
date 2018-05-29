@@ -4,19 +4,19 @@ namespace Testlin\Db\Driver;
 
 interface DbInterface
 {
-    public function select(String $sql);
+    public function select($sql);
 
-    public function find(String $sql);
+    public function find($sql);
 
-    public function getField(String $sql, String $field = null);
+    public function getField($sql, $field = null);
 
-    public function insert(String $table, array $data);
+    public function insert($table, $data);
 
     public function getInsertId();
 
-    public function update(String $table, array $data, $where);
+    public function update($table, $data, $where);
 
-    public function delete(String $table, $where);
+    public function delete($table, $where);
 
     public function beginTransaction();
 

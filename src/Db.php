@@ -7,7 +7,7 @@ class Db
     protected $db;
     protected $driver;
 
-    public function __construct(string $driver)
+    public function __construct($driver)
     {
         $driver = strtolower($driver);
         if (in_array($driver, array('pdo', 'mysqli')) == false) {
@@ -16,7 +16,7 @@ class Db
         $this->driver = $driver;
     }
 
-    public function init(array $config)
+    public function init($config)
     {
         $driver = $this->driver;
         if (!file_exists(__DIR__ . '/Driver/' . ucfirst($driver) . '.php')) {

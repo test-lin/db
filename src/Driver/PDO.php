@@ -11,12 +11,12 @@ class Pdo implements DbInterface
     {
         if (is_null($this->pdo)) {
             $dbtype = 'mysql';
-            $host = $config['host'] ?? '127.0.0.1';
-            $port = $config['port'] ?? '3306';
-            $dbname = $config['dbname'] ?? '';
-            $charset = $config['charset'] ?? 'utf8';
+            $host = isset($config['host']) ? $config['host'] : '127.0.0.1';
+            $port = isset($config['port']) ? $config['port'] : '3306';
+            $dbname = isset($config['dbname']) ? $config['dbname'] : '';
+            $charset = isset($config['charset']) ? $config['charset'] : 'utf8';
             $dsn = "{$dbtype}:host={$host};dbname={$dbname};charset={$charset};port={$port}";
-            
+
             try {
                 $this->pdo = new \PDO($dsn, $config['username'], $config['password']);
             } catch (\PDOException $e) {
@@ -39,7 +39,7 @@ class Pdo implements DbInterface
 
         return $sth;
     }
-    
+
     public function exec($sql,$lastId = false)
     {
         if($lastId)
@@ -51,7 +51,7 @@ class Pdo implements DbInterface
         }
     }
 
-    public function select(String $sql)
+    public function select($sql)
     {
         $sth = $this->query($sql);
 
@@ -60,7 +60,7 @@ class Pdo implements DbInterface
         return $result ? $result : array();
     }
 
-    public function find(String $sql)
+    public function find($sql)
     {
         $sth = $this->query($sql);
 
@@ -69,7 +69,7 @@ class Pdo implements DbInterface
         return $result ? $result : array();
     }
 
-    public function getField(String $sql, String $field = null)
+    public function getField($sql, $field = null)
     {
         $sth = $this->query($sql);
 
@@ -78,7 +78,7 @@ class Pdo implements DbInterface
         return isset($result['0']) ? $result['0'] : '';
     }
 
-    public function insert(String $table, array $data)
+    public function insert($table, $data)
     {
         $fields = "`" . join("`, `", array_keys($data)) . "`";
         $data = "'" . join("', '", array_values($data)) . "'";
@@ -93,7 +93,7 @@ class Pdo implements DbInterface
         return $this->pdo->lastInsertId();
     }
 
-    public function update(String $table, array $data, $where)
+    public function update($table, $data, $where)
     {
         $where = $where ?: '1';
         $data = "'" . join("', '", array_values($data)) . "'";
@@ -105,7 +105,7 @@ class Pdo implements DbInterface
         return ($rs === false) ? false : true;
     }
 
-    public function delete(String $table, $where)
+    public function delete($table, $where)
     {
         $sql = 'DELETE FROM `'.$table.'`';
 

@@ -10,13 +10,13 @@ class Mysqli implements DbInterface
     public function __construct(array $config)
     {
         if (is_null($this->mysqli)) {
-            $host = $config['host'] ?? '127.0.0.1';
-            $port = $config['port'] ?? '3306';
-            $dbname = $config['dbname'] ?? '';
-            $charset = $config['charset'] ?? 'utf8';
+            $host = isset($config['host']) ? $config['host'] : '127.0.0.1';
+            $port = isset($config['port']) ? $config['port'] : '3306';
+            $dbname = isset($config['dbname']) ? $config['dbname'] : '';
+            $charset = isset($config['charset']) ? $config['charset'] : 'utf8';
             $this->mysqli = new \mysqli($host, $config['username'], $config['password'], $dbname, $port);
             if ($this->mysqli->connect_error) {
-                throw new \Exception('Connect Error (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error);
+                throw new \Exception('Connect Error (' . $this->mysqli->connect_errno . ') ' . $this->mysqli->connect_error);
             }
 
             $this->mysqli->set_charset($charset);
@@ -41,18 +41,7 @@ class Mysqli implements DbInterface
         return $result;
     }
 
-    protected function query($sql)
-    {
-        $result = $this->mysqli->query($sql);
-        if ($this->mysqli->errno) {
-            $error_message = "[Sql Error] {$this->mysqli->errno} - {$this->mysqli->error}";
-            throw new \Exception($error_message);
-        }
-
-        return $result;
-    }
-
-    public function select(String $sql)
+    public function select($sql)
     {
         $result = $this->query($sql);
 
@@ -66,26 +55,26 @@ class Mysqli implements DbInterface
         return $return;
     }
 
-    public function find(String $sql)
+    public function find($sql)
     {
         $result = $this->query($sql);
 
         return $result->fetch_assoc();
     }
 
-    public function getField(String $sql, String $field = null)
+    public function getField($sql, $field = null)
     {
         $result = $this->query($sql);
 
         $row = $result->fetch_array();
         if ($field !== null && $field) {
-            return $row[$field] ?? false;
+            return $row[$field] ?: false;
         } else {
-            return $row[0] ?? false;
+            return $row[0] ?: false;
         }
     }
 
-    public function insert(String $table, array $data)
+    public function insert($table, $data)
     {
         $fields = "`" . join("`, `", array_keys($data)) . "`";
         $data = "'" . join("', '", array_values($data)) . "'";
@@ -100,7 +89,7 @@ class Mysqli implements DbInterface
         return (int) $this->mysqli->insert_id;
     }
 
-    public function update(String $table, array $data, $where)
+    public function update($table, $data, $where)
     {
         // $where = $where ?: '1';
         $data = "'" . join("', '", array_values($data)) . "'";
@@ -110,7 +99,7 @@ class Mysqli implements DbInterface
         return (bool) $this->query($sql);
     }
 
-    public function delete(String $table, $where)
+    public function delete($table, $where)
     {
         $where = $where ?: '1';
         $sql = "DELETE {$table} WHERE {$where}";
