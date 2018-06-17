@@ -95,13 +95,16 @@ class Pdo implements DbInterface
 
     public function update($table, $data, $where)
     {
-        $data_arr = array();
+        $update_data = array();
         foreach ($data as $key => $value) {
-            $data_arr[] = "`{$key}`='{$value}'";
+            $update_data[] = "{$key}='{$value}'";
         }
-        $data_str = join(',', $data_arr);
+        if (empty($update_data)) {
+            return false;
+        }
+        $update_data = join(',', $update_data);
 
-        $sql = "UPDATE {$table} SET {$data_str} WHERE {$where}";
+        $sql = "UPDATE {$table} SET {$update_data} WHERE {$where}";
         $this->sql = $sql;
 
         $rs = $this->exec($sql);
