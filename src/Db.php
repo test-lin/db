@@ -6,11 +6,12 @@ class Db
 {
     protected $db;
     protected $driver;
+    protected $driver_list = array('pdo', 'mysqli', 'sqlite');
 
     public function __construct($driver)
     {
         $driver = strtolower($driver);
-        if (in_array($driver, array('pdo', 'mysqli')) == false) {
+        if (in_array($driver, $this->driver_list) == false) {
             throw new \Exception("not driver");
         }
         $this->driver = $driver;
