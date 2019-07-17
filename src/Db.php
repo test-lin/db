@@ -8,11 +8,12 @@ class Db
 {
     protected $db;
     protected $driver;
+    protected $drivers = ['pdo', 'mysqli', 'sqlite'];
 
     public function __construct(string $driver)
     {
         $driver = strtolower($driver);
-        if (in_array($driver, array('pdo', 'mysqli')) == false) {
+        if (in_array($driver, $this->drivers) == false) {
             throw new Exception("not driver");
         }
         $this->driver = $driver;
