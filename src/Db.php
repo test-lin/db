@@ -2,6 +2,8 @@
 
 namespace Testlin\Db;
 
+use Testlin\Db\DBException as Exception;
+
 class Db
 {
     protected $db;
@@ -11,7 +13,7 @@ class Db
     {
         $driver = strtolower($driver);
         if (in_array($driver, array('pdo', 'mysqli')) == false) {
-            throw new \Exception("not driver");
+            throw new Exception("not driver");
         }
         $this->driver = $driver;
     }
@@ -20,7 +22,7 @@ class Db
     {
         $driver = $this->driver;
         if (!file_exists(__DIR__ . '/Driver/' . ucfirst($driver) . '.php')) {
-            throw new \Exception("db driver [$driver] is not supported.");
+            throw new Exception("db driver [$driver] is not supported.");
         }
         $db = __NAMESPACE__ . '\\Driver\\' . ucfirst($driver);
         return new $db($config);

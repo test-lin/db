@@ -3,45 +3,45 @@
 namespace Testlin\Db\Driver;
 
 use Testlin\Db\DBException as Exception;
-use mysqli as DB;
-use mysqli_result;
+use SQLite3 as DB;
+use SQLite3Result;
 
-class Mysqli implements DbInterface
+class Sqlite implements DbInterface
 {
-    protected $mysqli;
+    protected $sqlite;
     protected $sql;
 
     public function __construct(array $config)
     {
-        if (is_null($this->mysqli)) {
-            $host = $config['host'] ?? '127.0.0.1';
-            $port = $config['port'] ?? '3306';
-            $dbname = $config['dbname'] ?? '';
-            $charset = $config['charset'] ?? 'utf8';
-            $this->mysqli = new DB($host, $config['username'], $config['password'], $dbname, $port);
-            if ($this->mysqli->connect_error) {
-                throw new Exception('Connect Error (' . $this->mysqli->connect_errno . ') ' . $this->mysqli->connect_error);
+        if (is_null($this->sqlite)) {
+            $db_file = isset($config['db_file']) ? $config['db_file'] : '';
+            if (file_exists($db_file) === false) {
+                throw new Exception('数据库文件不存在');
             }
 
-            $this->mysqli->set_charset($charset);
+            $this->sqlite = new DB($db_file);
+            if ($errno = $this->sqlite->lastErrorCode()) {
+                throw new Exception('Connect Error (' . $errno . ') ' . $this->sqlite->lastErrorMsg());
+            }
         }
 
-        return $this->mysqli;
+        return $this->sqlite;
     }
 
     /**
      * @param $sql
-     * @return bool|mysqli_result
+     * @return SQLite3Result
      * @throws Exception
      */
     protected function query($sql)
     {
         $this->sql = $sql;
 
-        $result = $this->mysqli->query($sql);
-        if ($this->mysqli->errno) {
-            $errorMessage = "[Sql Error] {$this->mysqli->errno} - {$this->mysqli->error}";
-            throw new Exception($errorMessage);
+        $result = $this->sqlite->query($sql);
+
+        if ($errno = $this->sqlite->lastErrorCode()) {
+            $error_message = "[Sql Error] {$errno} - ".$this->sqlite->lastErrorMsg();
+            throw new Exception($error_message);
         }
 
         return $result;
@@ -60,7 +60,7 @@ class Mysqli implements DbInterface
 
         $return = array();
         if ($result) {
-            while ($row = $result->fetch_assoc()) {
+            while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
                 $return[] = $row;
             }
         }
@@ -69,17 +69,22 @@ class Mysqli implements DbInterface
     }
 
     /**
-     * 单行查询
+     * 单选查询
      *
      * @param string $sql
-     * @return array|null
+     * @return array
      * @throws Exception
      */
     public function find(string $sql)
     {
         $result = $this->query($sql);
 
-        return $result->fetch_assoc();
+        $return = array();
+        if ($result) {
+            $return = $result->fetchArray(SQLITE3_ASSOC);
+        }
+
+        return $return;
     }
 
     /**
@@ -92,22 +97,25 @@ class Mysqli implements DbInterface
      */
     public function getField(string $sql, string $field = null)
     {
-        $result = $this->query($sql);
+        $row = $this->find($sql);
+        if (empty($row)) {
+            return false;
+        }
 
-        $row = $result->fetch_array();
         if ($field !== null && $field) {
-            return $row[$field] ?? false;
+            return $row[$field] ?: false;
         } else {
-            return $row[0] ?? false;
+            $data = array_shift($row);
+            return $data ?: false;
         }
     }
 
     /**
-     * 数据添加
+     * 添加数据
      *
      * @param string $table
      * @param array $data
-     * @return bool
+     * @return SQLite3Result|bool
      * @throws Exception
      */
     public function insert(string $table, array $data)
@@ -126,13 +134,13 @@ class Mysqli implements DbInterface
     }
 
     /**
-     * 取添加成功后的 id
+     * 取得添加成功后的 id
      *
-     * @return int 添加成功后的 id
+     * @return int
      */
     public function getInsertId()
     {
-        return $this->mysqli->insert_id;
+        return $this->sqlite->lastInsertRowID();
     }
 
     /**
@@ -170,36 +178,40 @@ class Mysqli implements DbInterface
      */
     public function delete(string $table, $where)
     {
-        $where = $where ?: '1';
-        $sql = "DELETE {$table} WHERE {$where}";
+        $where = $where ? " WHERE {$where} " : '';
+        $sql = "DELETE FROM {$table} {$where}";
 
         return ($this->query($sql) !== false) ? true : false;
     }
 
     /**
      * 开启事务
+     *
+     * @throws Exception
      */
     public function beginTransaction()
     {
-        $this->mysqli->autocommit(false);
+        $this->query('BEGIN');
     }
 
     /**
      * 回滚事务
+     *
+     * @throws Exception
      */
     public function rollback()
     {
-        $this->mysqli->rollback();
-        $this->mysqli->autocommit(true);
+        $this->query('ROLLBACK');
     }
 
     /**
      * 提交事务
+     *
+     * @throws Exception
      */
     public function commit()
     {
-        $this->mysqli->commit();
-        $this->mysqli->autocommit(true);
+        $this->query('COMMIT');
     }
 
     /**
